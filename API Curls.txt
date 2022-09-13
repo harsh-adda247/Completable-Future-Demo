@@ -1,0 +1,13 @@
+API to save entities without async behaviour : 
+
+curl --location --request GET 'localhost:8090/save/entities/without/parallel'
+
+
+API to save entities with async behaviour: 
+
+curl --location --request GET 'localhost:8090/save/entities'
+
+
+API to perform multiple operations simultaneously : 
+
+curl --location --request GET 'localhost:8090/async/multiple?element=676454'
