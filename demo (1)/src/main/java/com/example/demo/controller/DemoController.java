@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entities.EmployeesEntity;
+import com.example.demo.repository.EmployeesRepository;
 import com.example.demo.service.DemoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,9 @@ public class DemoController {
     @Autowired
     private DemoService demoService;
 
+    @Autowired
+    private EmployeesRepository employeesRepo;
+
     private Logger logger = LoggerFactory.getLogger("DemoController");
 
     public DemoController() {
@@ -36,7 +40,7 @@ public class DemoController {
     public ResponseEntity<?> saveEntities() {
         logger.info("saving entities initiated...");
         demoService.saveEntities();
-        logger.info("returning response while saving....");
+        logger.info("saved entities !");
         return new ResponseEntity<>("Success", HttpStatus.OK);
     }
 
@@ -70,5 +74,43 @@ public class DemoController {
         }
         logger.info("returning response....");
         return new ResponseEntity<>("Success", HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/v1/fetch/data")
+    public ResponseEntity<Integer> fetchElements(@RequestParam Integer startRange,
+                                                 @RequestParam Integer endRange) {
+        Integer totalSize = 0;
+        try {
+            logger.info("fetching 1st list...");
+            CompletableFuture<List<EmployeesEntity>> future1 = CompletableFuture.
+                    supplyAsync(() -> employeesRepo.findAll());
+            logger.info("fetching 2nd list..");
+            CompletableFuture<List<EmployeesEntity>> future2 = CompletableFuture.
+                    supplyAsync(() -> employeesRepo.findByIdRange(startRange, endRange));
+            logger.info("haven't blocked yet...");
+            List<EmployeesEntity> list1 = future1.get();
+            List<EmployeesEntity> list2 = future2.get();
+            logger.info("fetched both of the lists...");
+            totalSize = totalSize.intValue() + list1.size() + list2.size();
+        } catch (Exception e) {
+            logger.error("Error occurred while future...", e);
+        }
+        System.out.println();
+        return new ResponseEntity<>(totalSize, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/v2/fetch/data")
+    public ResponseEntity<Integer> fetchElementsV2(@RequestParam Integer startRange,
+                                                   @RequestParam Integer endRange) {
+        Integer totalSize = 0;
+        logger.info("fetching 1st list...");
+        List<EmployeesEntity> list1 = employeesRepo.findAll();
+        logger.info("fetching 2nd list..");
+        List<EmployeesEntity> list2 = employeesRepo.findByIdRange(startRange, endRange);
+        logger.info("fetched both of the lists...");
+        totalSize = totalSize.intValue() + list1.size() + list2.size();
+        System.out.println();
+        
+        return new ResponseEntity<>(totalSize, HttpStatus.OK);
     }
 }
